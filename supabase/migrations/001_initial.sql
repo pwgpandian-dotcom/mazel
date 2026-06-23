@@ -1,26 +1,10 @@
 -- ============================================================
 -- Mazel Marketplace — Initial Schema + RLS
--- Run this in: Supabase Dashboard → SQL Editor → New Query
+-- Paste this entire file into Supabase SQL Editor and Run
 -- ============================================================
 
--- Helper: check if the current user is an admin
-CREATE OR REPLACE FUNCTION is_admin()
-RETURNS BOOLEAN AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'
-  );
-$$ LANGUAGE SQL SECURITY DEFINER STABLE;
-
--- Helper: check if current user is an approved seller
-CREATE OR REPLACE FUNCTION is_approved_seller()
-RETURNS BOOLEAN AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM sellers WHERE id = auth.uid() AND status = 'approved'
-  );
-$$ LANGUAGE SQL SECURITY DEFINER STABLE;
-
 -- ============================================================
--- TABLES
+-- TABLES (must come before functions that reference them)
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS profiles (
@@ -89,15 +73,33 @@ CREATE TABLE IF NOT EXISTS order_items (
 -- INDEXES
 -- ============================================================
 
-CREATE INDEX IF NOT EXISTS idx_products_seller   ON products(seller_id);
-CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id);
-CREATE INDEX IF NOT EXISTS idx_products_status   ON products(status);
-CREATE INDEX IF NOT EXISTS idx_orders_buyer      ON orders(buyer_id);
+CREATE INDEX IF NOT EXISTS idx_products_seller    ON products(seller_id);
+CREATE INDEX IF NOT EXISTS idx_products_category  ON products(category_id);
+CREATE INDEX IF NOT EXISTS idx_products_status    ON products(status);
+CREATE INDEX IF NOT EXISTS idx_orders_buyer       ON orders(buyer_id);
 CREATE INDEX IF NOT EXISTS idx_order_items_order  ON order_items(order_id);
 CREATE INDEX IF NOT EXISTS idx_order_items_seller ON order_items(seller_id);
 
 -- ============================================================
--- TRIGGER: auto-create profile on signup
+-- HELPER FUNCTIONS (tables must exist first)
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'
+  );
+$$ LANGUAGE SQL SECURITY DEFINER STABLE;
+
+CREATE OR REPLACE FUNCTION is_approved_seller()
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM sellers WHERE id = auth.uid() AND status = 'approved'
+  );
+$$ LANGUAGE SQL SECURITY DEFINER STABLE;
+
+-- ============================================================
+-- TRIGGER: auto-create profile row on signup
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION handle_new_user()
@@ -137,15 +139,15 @@ CREATE POLICY "profiles: own insert" ON profiles FOR INSERT WITH CHECK (auth.uid
 CREATE POLICY "profiles: own update" ON profiles FOR UPDATE USING (auth.uid() = id);
 
 -- sellers
-CREATE POLICY "sellers: own read"    ON sellers FOR SELECT USING (auth.uid() = id OR is_admin());
-CREATE POLICY "sellers: own insert"  ON sellers FOR INSERT WITH CHECK (auth.uid() = id);
-CREATE POLICY "sellers: own update"  ON sellers FOR UPDATE USING (auth.uid() = id OR is_admin());
+CREATE POLICY "sellers: own read"   ON sellers FOR SELECT USING (auth.uid() = id OR is_admin());
+CREATE POLICY "sellers: own insert" ON sellers FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "sellers: own update" ON sellers FOR UPDATE USING (auth.uid() = id OR is_admin());
 
 -- categories — public read, admin write
-CREATE POLICY "categories: public read"    ON categories FOR SELECT USING (true);
-CREATE POLICY "categories: admin insert"   ON categories FOR INSERT WITH CHECK (is_admin());
-CREATE POLICY "categories: admin update"   ON categories FOR UPDATE USING (is_admin());
-CREATE POLICY "categories: admin delete"   ON categories FOR DELETE USING (is_admin());
+CREATE POLICY "categories: public read"  ON categories FOR SELECT USING (true);
+CREATE POLICY "categories: admin insert" ON categories FOR INSERT WITH CHECK (is_admin());
+CREATE POLICY "categories: admin update" ON categories FOR UPDATE USING (is_admin());
+CREATE POLICY "categories: admin delete" ON categories FOR DELETE USING (is_admin());
 
 -- products — public read active, seller writes own
 CREATE POLICY "products: public read" ON products
@@ -160,12 +162,12 @@ CREATE POLICY "products: seller update" ON products
 CREATE POLICY "products: seller delete" ON products
   FOR DELETE USING (seller_id = auth.uid() OR is_admin());
 
--- orders — buyer reads own, buyer inserts own, admin full
+-- orders
 CREATE POLICY "orders: buyer read"   ON orders FOR SELECT USING (buyer_id = auth.uid() OR is_admin());
 CREATE POLICY "orders: buyer insert" ON orders FOR INSERT WITH CHECK (buyer_id = auth.uid());
 CREATE POLICY "orders: admin update" ON orders FOR UPDATE USING (is_admin());
 
--- order_items — buyer via order, seller via seller_id, admin all
+-- order_items
 CREATE POLICY "order_items: read" ON order_items
   FOR SELECT USING (
     EXISTS (SELECT 1 FROM orders WHERE id = order_items.order_id AND buyer_id = auth.uid())
@@ -186,10 +188,10 @@ CREATE POLICY "order_items: seller update" ON order_items
 -- ============================================================
 
 INSERT INTO categories (name, slug) VALUES
-  ('Groceries',    'groceries'),
-  ('Clothing',     'clothing'),
-  ('Electronics',  'electronics'),
-  ('Home',         'home'),
-  ('Beauty',       'beauty'),
-  ('Handmade',     'handmade')
+  ('Groceries',   'groceries'),
+  ('Clothing',    'clothing'),
+  ('Electronics', 'electronics'),
+  ('Home',        'home'),
+  ('Beauty',      'beauty'),
+  ('Handmade',    'handmade')
 ON CONFLICT (slug) DO NOTHING;

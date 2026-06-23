@@ -25,32 +25,20 @@ export async function middleware(request) {
     }
   )
 
-  // Refresh the session so it doesn't expire mid-visit.
-  // IMPORTANT: never call supabase.auth.getSession() here —
-  // getUser() re-validates with Supabase Auth on every request.
   const { data: { user } } = await supabase.auth.getUser()
 
   const { pathname } = request.nextUrl
 
-  // Protect seller routes — must be logged in + have seller role
-  if (pathname.startsWith('/seller')) {
-    if (!user) {
-      return NextResponse.redirect(new URL('/auth/login?next=/seller', request.url))
-    }
+  if (pathname.startsWith('/seller') && !user) {
+    return NextResponse.redirect(new URL('/auth/login?next=/seller', request.url))
   }
 
-  // Protect admin routes
-  if (pathname.startsWith('/admin')) {
-    if (!user) {
-      return NextResponse.redirect(new URL('/auth/login?next=/admin', request.url))
-    }
+  if (pathname.startsWith('/admin') && !user) {
+    return NextResponse.redirect(new URL('/auth/login?next=/admin', request.url))
   }
 
-  // Protect checkout / orders — must be logged in
-  if (pathname.startsWith('/checkout') || pathname.startsWith('/orders')) {
-    if (!user) {
-      return NextResponse.redirect(new URL(`/auth/login?next=${pathname}`, request.url))
-    }
+  if ((pathname.startsWith('/checkout') || pathname.startsWith('/orders')) && !user) {
+    return NextResponse.redirect(new URL(`/auth/login?next=${pathname}`, request.url))
   }
 
   return supabaseResponse
