@@ -18,7 +18,7 @@ export default function SignupPage() {
     setErrorMsg('');
     setLoading(true);
     const supabase = createClient();
-    const { error: authError } = await supabase.auth.signUp({
+    const { data: signUpData, error: authError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
@@ -26,8 +26,12 @@ export default function SignupPage() {
         emailRedirectTo: `${location.origin}/auth/callback`,
       },
     });
+    console.log('signUp result:', { signUpData, authError });
     if (authError) {
-      setErrorMsg(authError.message || 'Signup failed. Please try again.');
+      const msg = typeof authError.message === 'string' && authError.message
+        ? authError.message
+        : JSON.stringify(authError);
+      setErrorMsg(msg);
       setLoading(false);
       return;
     }
