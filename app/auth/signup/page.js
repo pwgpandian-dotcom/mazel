@@ -33,9 +33,19 @@ export default function SignupPage() {
       console.log('Supabase signUp response:', JSON.stringify({ data, error }, null, 2));
 
       if (error) {
-        setErrorMsg(error.message ?? 'Signup failed — check console (F12) for details');
+        setErrorMsg(error.message ?? 'Signup failed. Please try again.');
         setLoading(false);
         return;
+      }
+
+      // Create profile row manually (trigger may not exist)
+      if (data?.user) {
+        await supabase.from('profiles').upsert({
+          id: data.user.id,
+          full_name: fullName,
+          phone: phone,
+          role: 'buyer',
+        }, { onConflict: 'id' });
       }
 
       setDone(true);
