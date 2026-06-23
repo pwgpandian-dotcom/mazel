@@ -96,6 +96,10 @@ function makePNG(size) {
 }
 
 const pub = path.join(__dirname, '../public');
-fs.writeFileSync(path.join(pub, 'icon-192.png'), makePNG(192));
-fs.writeFileSync(path.join(pub, 'icon-512.png'), makePNG(512));
-console.log('✓ icon-192.png and icon-512.png — navy background, gold M');
+fs.writeFileSync(path.join(pub, 'icon-192.png'),              makePNG(192));
+fs.writeFileSync(path.join(pub, 'icon-512.png'),              makePNG(512));
+fs.writeFileSync(path.join(pub, 'mazel-icon-192.png'),        makePNG(192));
+fs.writeFileSync(path.join(pub, 'mazel-icon-512.png'),        makePNG(512));
+fs.writeFileSync(path.join(pub, 'mazel-icon-512-maskable.png'), makePNG(512));
+fs.writeFileSync(path.join(pub, 'mazel-apple-touch-icon.png'), makePNG(180));
+console.log('✓ All PWA icons generated — navy background, gold M');
