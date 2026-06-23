@@ -1,10 +1,25 @@
 'use client';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const CartContext = createContext(null);
+const CART_KEY = 'mazel_cart';
 
 export function CartProvider({ children }) {
   const [items, setItems] = useState([]);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(CART_KEY);
+      if (saved) setItems(JSON.parse(saved));
+    } catch {}
+    setReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!ready) return;
+    try { localStorage.setItem(CART_KEY, JSON.stringify(items)); } catch {}
+  }, [items, ready]);
 
   const addItem = (product, qty = 1) => {
     setItems(prev => {

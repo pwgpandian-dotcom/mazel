@@ -9,7 +9,7 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: '#E0A500',
+  themeColor: '#1B2A4A',
   width: 'device-width',
   initialScale: 1,
 };
@@ -29,7 +29,7 @@ export default function RootLayout({ children }) {
           }}
         />
       </head>
-      <body className="h-full antialiased">
+      <body className="h-full antialiased" style={{ backgroundColor: '#f9fafb' }}>
         <Providers>{children}</Providers>
       </body>
     </html>

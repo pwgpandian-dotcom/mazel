@@ -32,6 +32,7 @@ export default function BecomeSellerPage() {
       shop_name: form.shopName,
       shop_address: form.shopAddress,
       gst_number: form.gstNumber || null,
+      status: 'approved',
     });
     if (e1) { setError(e1.message); setSubmitting(false); return; }
     await supabase.from('profiles').update({ role: 'seller' }).eq('id', user.id);

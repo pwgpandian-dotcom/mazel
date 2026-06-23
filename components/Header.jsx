@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 
 const NAV = {
   buyer:  [{ href: '/', label: 'Home' }, { href: '/orders', label: 'My Orders' }],
-  seller: [{ href: '/seller', label: 'Dashboard' }, { href: '/seller/products', label: 'Products' }, { href: '/seller/orders', label: 'Orders' }],
+  seller: [{ href: '/seller', label: 'Dashboard' }, { href: '/seller/products', label: 'Products' }, { href: '/seller/products/add', label: '+ Add Product' }, { href: '/seller/orders', label: 'Orders' }],
   admin:  [{ href: '/admin', label: 'Dashboard' }, { href: '/admin/sellers', label: 'Sellers' }, { href: '/admin/categories', label: 'Categories' }, { href: '/admin/orders', label: 'Orders' }],
 };
 
