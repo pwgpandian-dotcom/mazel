@@ -17,8 +17,22 @@ function LoginForm() {
     e.preventDefault();
     setError(''); setLoading(true);
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword(form);
-    if (error) { setError(error.message); setLoading(false); return; }
+    const { data, error: authError } = await supabase.auth.signInWithPassword(form);
+    if (authError) { setError(authError.message); setLoading(false); return; }
+
+    // Ensure profile exists (safety net for users who signed up before trigger fix)
+    if (data?.user) {
+      const { data: prof } = await supabase.from('profiles').select('id').eq('id', data.user.id).single();
+      if (!prof) {
+        await supabase.from('profiles').upsert({
+          id: data.user.id,
+          full_name: data.user.user_metadata?.full_name || '',
+          phone: data.user.user_metadata?.phone || '',
+          role: 'buyer',
+        }, { onConflict: 'id' });
+      }
+    }
+
     router.push(next);
     router.refresh();
   }

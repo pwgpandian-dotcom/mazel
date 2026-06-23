@@ -5,7 +5,6 @@ export const metadata = {
   title: 'Mazel — Your Lucky Marketplace',
   description: 'Shop on Mazel. Quality products from trusted sellers.',
   manifest: '/manifest.json',
-  themeColor: '#E0A500',
   appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Mazel' },
 };
 
@@ -21,6 +20,7 @@ export default function RootLayout({ children }) {
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <script
