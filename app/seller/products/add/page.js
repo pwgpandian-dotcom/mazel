@@ -87,9 +87,15 @@ function AddProductForm() {
     };
 
     if (editId) {
-      await supabase.from('products').update(payload).eq('id', editId);
+      const { error } = await supabase.from('products').update(payload).eq('id', editId);
+      if (error) { alert('Update failed: ' + error.message); setSaving(false); return; }
     } else {
-      await supabase.from('products').insert({ ...payload, seller_id: user.id });
+      const { error } = await supabase.from('products').insert({ ...payload, seller_id: user.id });
+      if (error) {
+        alert(error.message.includes('policy') ? 'Your seller account must be approved before adding products.' : 'Failed: ' + error.message);
+        setSaving(false);
+        return;
+      }
     }
 
     setSaved(true);

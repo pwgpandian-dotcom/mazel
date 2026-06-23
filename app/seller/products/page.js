@@ -11,14 +11,21 @@ function formatPrice(n) {
 export default function SellerProductsPage() {
   const { user, loading: authLoading } = useUser();
   const [products, setProducts] = useState([]);
+  const [sellerStatus, setSellerStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState(null);
 
   useEffect(() => {
     if (authLoading || !user) return;
-    createClient().from('products').select('*, categories(name)').eq('seller_id', user.id)
-      .order('created_at', { ascending: false })
-      .then(({ data }) => { setProducts(data ?? []); setLoading(false); });
+    const supabase = createClient();
+    Promise.all([
+      supabase.from('products').select('*, categories(name)').eq('seller_id', user.id).order('created_at', { ascending: false }),
+      supabase.from('sellers').select('status').eq('id', user.id).single(),
+    ]).then(([{ data: prods }, { data: seller }]) => {
+      setProducts(prods ?? []);
+      setSellerStatus(seller?.status ?? null);
+      setLoading(false);
+    });
   }, [user, authLoading]);
 
   async function confirmDelete(id) {
@@ -38,9 +45,11 @@ export default function SellerProductsPage() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-        <Link href="/seller/products/add" className="bg-gold hover:bg-gold-600 text-navy-900 font-bold px-5 py-2.5 rounded-xl text-sm transition-colors">
-          + Add Product
-        </Link>
+        {sellerStatus === 'approved' && (
+          <Link href="/seller/products/add" className="bg-gold hover:bg-gold-600 text-navy-900 font-bold px-5 py-2.5 rounded-xl text-sm transition-colors">
+            + Add Product
+          </Link>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-6">
@@ -56,7 +65,10 @@ export default function SellerProductsPage() {
         <div className="bg-white rounded-2xl p-12 text-center shadow-sm border border-gray-100">
           <p className="text-4xl mb-4">📦</p>
           <p className="font-semibold text-gray-700 mb-4">No products yet</p>
-          <Link href="/seller/products/add" className="bg-gold text-navy-900 font-bold px-6 py-3 rounded-xl inline-block">Add First Product</Link>
+          {sellerStatus === 'approved'
+            ? <Link href="/seller/products/add" className="bg-gold text-navy-900 font-bold px-6 py-3 rounded-xl inline-block">Add First Product</Link>
+            : <p className="text-sm text-amber-600">Waiting for admin approval before you can add products.</p>
+          }
         </div>
       ) : (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">

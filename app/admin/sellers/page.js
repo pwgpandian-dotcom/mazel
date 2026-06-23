@@ -15,7 +15,7 @@ export default function AdminSellersPage() {
     if (authLoading || !user) return;
     createClient()
       .from('sellers')
-      .select('*, profiles(full_name, email, phone)')
+      .select('*, profiles(full_name, email, phone, role)')
       .order('created_at', { ascending: false })
       .then(({ data }) => { setSellers(data ?? []); setLoading(false); });
   }, [user, authLoading]);
@@ -73,7 +73,10 @@ export default function AdminSellersPage() {
                   <h3 className="font-bold text-gray-900">{seller.shop_name}</h3>
                   <StatusBadge status={seller.status} />
                 </div>
-                <p className="text-sm text-gray-500">{seller.profiles?.full_name} · {seller.profiles?.email}</p>
+                <p className="text-sm text-gray-500">
+                  {seller.profiles?.full_name}
+                  {seller.profiles?.email ? ` · ${seller.profiles.email}` : ''}
+                </p>
                 <p className="text-xs text-gray-400 mt-0.5">📞 {seller.profiles?.phone}</p>
                 {seller.shop_address && <p className="text-xs text-gray-400 mt-0.5">📍 {seller.shop_address}</p>}
                 {seller.gst_number && <p className="text-xs text-gray-400 mt-0.5">GST: {seller.gst_number}</p>}

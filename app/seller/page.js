@@ -60,7 +60,7 @@ export default function SellerDashboardPage() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       {seller.status === 'pending' && (
         <div className="bg-amber-50 border border-amber-200 text-amber-700 rounded-xl px-4 py-3 mb-6 text-sm font-medium">
-          ⏳ Your shop is pending admin approval. You can set up products but they won't be visible until approved.
+          ⏳ Your shop is pending admin approval. Products cannot be added until your account is approved.
         </div>
       )}
       {seller.status === 'rejected' && (
@@ -75,9 +75,11 @@ export default function SellerDashboardPage() {
           <h1 className="text-2xl font-black text-gray-900">{seller.shop_name}</h1>
           <p className="text-xs text-gray-400 mt-0.5">{seller.shop_address}</p>
         </div>
-        <Link href="/seller/products/add" className="bg-gold hover:bg-gold-600 text-navy-900 font-bold px-5 py-2.5 rounded-xl text-sm transition-colors">
-          + Add Product
-        </Link>
+        {seller.status === 'approved' && (
+          <Link href="/seller/products/add" className="bg-gold hover:bg-gold-600 text-navy-900 font-bold px-5 py-2.5 rounded-xl text-sm transition-colors">
+            + Add Product
+          </Link>
+        )}
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
