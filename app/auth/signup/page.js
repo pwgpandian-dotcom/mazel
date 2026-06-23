@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 export default function SignupPage() {
   const router = useRouter();
   const [form, setForm] = useState({ fullName: '', phone: '', email: '', password: '' });
-  const [error, setError] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -15,9 +15,10 @@ export default function SignupPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setError(''); setLoading(true);
+    setErrorMsg('');
+    setLoading(true);
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+    const { error: authError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
@@ -25,9 +26,12 @@ export default function SignupPage() {
         emailRedirectTo: `${location.origin}/auth/callback`,
       },
     });
-    if (error) { setError(error.message); setLoading(false); return; }
+    if (authError) {
+      setErrorMsg(authError.message || 'Signup failed. Please try again.');
+      setLoading(false);
+      return;
+    }
     setDone(true);
-    // If email confirm is disabled in Supabase, user is immediately signed in
     setTimeout(() => router.push('/'), 2000);
   }
 
@@ -36,7 +40,7 @@ export default function SignupPage() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-md text-center">
         <p className="text-4xl mb-4">🎉</p>
         <h2 className="text-xl font-black text-gray-900 mb-2">Account created!</h2>
-        <p className="text-gray-500 text-sm">Check your email to confirm, or you'll be redirected shortly…</p>
+        <p className="text-gray-500 text-sm">Redirecting to home…</p>
       </div>
     </div>
   );
@@ -49,26 +53,36 @@ export default function SignupPage() {
           <p className="text-gray-500 text-sm mt-2">Create your account</p>
         </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 mb-5 text-sm">{error}</div>
+        {errorMsg && (
+          <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 mb-5 text-sm">
+            {errorMsg}
+          </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {[
-            { label: 'Full Name', key: 'fullName', type: 'text', placeholder: 'Ananya Krishnan' },
-            { label: 'Phone Number', key: 'phone', type: 'tel', placeholder: '9876543210' },
-            { label: 'Email', key: 'email', type: 'email', placeholder: 'you@example.com' },
-            { label: 'Password', key: 'password', type: 'password', placeholder: 'Min 6 characters' },
+            { label: 'Full Name',     key: 'fullName',  type: 'text',     placeholder: 'Ananya Krishnan' },
+            { label: 'Phone Number',  key: 'phone',     type: 'tel',      placeholder: '9876543210' },
+            { label: 'Email',         key: 'email',     type: 'email',    placeholder: 'you@example.com' },
+            { label: 'Password',      key: 'password',  type: 'password', placeholder: 'Min 6 characters' },
           ].map(f => (
             <div key={f.key}>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">{f.label}</label>
-              <input type={f.type} value={form[f.key]} onChange={set(f.key)}
-                placeholder={f.placeholder} required
-                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20" />
+              <input
+                type={f.type}
+                value={form[f.key]}
+                onChange={set(f.key)}
+                placeholder={f.placeholder}
+                required
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
+              />
             </div>
           ))}
-          <button type="submit" disabled={loading}
-            className="w-full bg-gold hover:bg-gold-600 text-navy-900 font-black py-3 rounded-xl transition-colors mt-2 disabled:opacity-60">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-gold hover:bg-gold-600 text-navy-900 font-black py-3 rounded-xl transition-colors mt-2 disabled:opacity-60"
+          >
             {loading ? 'Creating account…' : 'Create Account'}
           </button>
         </form>
